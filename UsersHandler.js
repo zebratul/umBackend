@@ -9,7 +9,7 @@ class UsersHandler {
         try {
             const token = req.headers.authorization.split(" ")[1];
             const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-            const result = await this.pool.query("SELECT * FROM users");
+            const result = await this.pool.query("SELECT * FROM userbase");
             res.status(200).json(result.rows);
         } catch (error) {
             console.log(error);
@@ -24,7 +24,7 @@ class UsersHandler {
             const token = req.headers.authorization.split(" ")[1];
             const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
 
-            const text = "UPDATE users SET status = 'blocked' WHERE id = ANY($1)";
+            const text = "UPDATE userbase SET status = 'blocked' WHERE id = ANY($1)";
             const values = [ids];
 
             const result = await this.pool.query(text, values);
@@ -43,7 +43,7 @@ class UsersHandler {
             const token = req.headers.authorization.split(" ")[1];
             const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
 
-            const text = "UPDATE users SET status = 'active' WHERE id = ANY($1)";
+            const text = "UPDATE userbase SET status = 'active' WHERE id = ANY($1)";
             const values = [ids];
 
             const result = await this.pool.query(text, values);
@@ -62,7 +62,7 @@ class UsersHandler {
             const token = req.headers.authorization.split(" ")[1];
             const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
 
-            const text = "DELETE FROM users WHERE id = ANY($1)";
+            const text = "DELETE FROM userbase WHERE id = ANY($1)";
             const values = [ids];
 
             const result = await this.pool.query(text, values);

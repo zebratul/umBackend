@@ -13,7 +13,7 @@ class LoginHandler {
 
         try {
             const query = {
-                text: 'SELECT * FROM users WHERE email = $1',
+                text: 'SELECT * FROM userbase WHERE email = $1',
                 values: [email],
           };
 

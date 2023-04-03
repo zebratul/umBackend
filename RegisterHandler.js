@@ -10,7 +10,7 @@ class RegisterHandler {
   
     async getUserByEmail(email) {
         const query = {
-            text: 'SELECT id FROM users WHERE email = $1',
+            text: 'SELECT id FROM userbase WHERE email = $1',
             values: [email],
         };
         
@@ -31,7 +31,7 @@ class RegisterHandler {
         const hash = await bcrypt.hash(password, salt);
     
         const text =
-            "INSERT INTO users(name, email, password, registration_time, status) VALUES($1, $2, $3, $4, $5) RETURNING id";
+            "INSERT INTO userbase(name, email, password, registration_time, status) VALUES($1, $2, $3, $4, $5) RETURNING id";
         const values = [name, email, hash, new Date(), "active"];
   
         try {
