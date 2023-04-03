@@ -1,19 +1,16 @@
 class TimeLogger {
-    constructor(pool) {
-        this.pool = pool;
+    constructor(User) {
+        this.User = User;
     }
-  
+
     async logTime(userId) {
-        const text = "UPDATE users SET last_login_time = NOW() WHERE id = $1";
-        const values = [userId];
-    
         try {
-            await this.pool.query(text, values);
+            await this.User.update({ last_login_time: new Date() }, { where: { id: userId } });
             console.log("User login time updated successfully.");
         } catch (error) {
             console.log(error);
         }
     }
-  }
-  
-  module.exports = TimeLogger;
+}
+
+module.exports = TimeLogger;

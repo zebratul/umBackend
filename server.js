@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
-const { Pool } = require("pg");
+const { Sequelize, DataTypes } = require("sequelize");
 require('dotenv').config();
 
 const RegisterHandler = require("./RegisterHandler");
@@ -16,38 +16,85 @@ class Server {
         this.app.use(express.json());
         this.app.use(cors());
 
-        this.pool = new Pool({
-            user: process.env.DB_USER,
-            password: process.env.DB_PASSWORD,
+        this.sequelize = new Sequelize({
+            dialect: "postgres",
+            protocol: "postgres",
+            dialectOptions: {
+                ssl: {
+                    require: true,
+                    rejectUnauthorized: false,
+                }
+            },
             host: process.env.DB_HOST,
             port: process.env.DB_PORT,
+            username: process.env.DB_USER,
+            password: process.env.DB_PASSWORD,
             database: process.env.DB_NAME,
-            ssl: {
-                rejectUnauthorized: false,
+        });
+
+        this.User = this.sequelize.define('user', {
+            id: {
+                type: DataTypes.INTEGER,
+                primaryKey: true,
+                autoIncrement: true
             },
-      });
+            name: {
+                type: DataTypes.STRING,
+                allowNull: false,
+            },
+            email: {
+                type: DataTypes.STRING,
+                allowNull: false,
+            },
+            password: {
+                type: DataTypes.STRING,
+                allowNull: false,
+            },
+            last_login_time: {
+                type: DataTypes.DATE,
+                allowNull: true,
+            },
+            registration_time: {
+                type: DataTypes.DATE,
+                allowNull: false,
+            },
+            createdat: {
+                type: DataTypes.DATE,
+                field: 'createdat',
+            },
+            updatedat: {
+                type: DataTypes.DATE,
+                field: 'updatedat',
+            },
+            status: {
+                type: DataTypes.STRING,
+                allowNull: false,
+            }
+        }, {
+            tableName: 'userbase',
+            timestamps: false // turn off automatic createdAt and updatedAt columns
+        });
+        
 
-      this.pool.connect((error) => {
-          if (error) {
-              console.log(error);
-          } else {
-              console.log("Connected to PostgreSQL database.");
-          }
-      });
+        this.sequelize.authenticate().then(() => {
+            console.log("Connected to PostgreSQL database.");
+        }).catch(error => {
+            console.log(error);
+        });
 
-      this.registerHandler = new RegisterHandler(this.pool);
-      this.loginHandler = new LoginHandler(this.pool);
-      this.usersHandler = new UsersHandler(this.pool);
-      this.app.post("/register", this.registerHandler.handle.bind(this.registerHandler));
-      this.app.post("/login", this.loginHandler.handle.bind(this.loginHandler));
-      this.app.get("/users", this.authenticate.bind(this), this.usersHandler.getUsers.bind(this.usersHandler));
-      this.app.put("/users/block", this.authenticate.bind(this), this.usersHandler.blockUsers.bind(this.usersHandler));
-      this.app.put("/users/unblock", this.authenticate.bind(this), this.usersHandler.unblockUsers.bind(this.usersHandler));
-      this.app.delete("/users", this.authenticate.bind(this), this.usersHandler.deleteUsers.bind(this.usersHandler));
+        this.registerHandler = new RegisterHandler(this.User);
+        this.loginHandler = new LoginHandler(this.User);
+        this.usersHandler = new UsersHandler(this.User);
+        this.app.post("/register", this.registerHandler.handle.bind(this.registerHandler));
+        this.app.post("/login", this.loginHandler.handle.bind(this.loginHandler));
+        this.app.get("/users", this.authenticate.bind(this), this.usersHandler.getUsers.bind(this.usersHandler));
+        this.app.put("/users/block", this.authenticate.bind(this), this.usersHandler.blockUsers.bind(this.usersHandler));
+        this.app.put("/users/unblock", this.authenticate.bind(this), this.usersHandler.unblockUsers.bind(this.usersHandler));
+        this.app.delete("/users", this.authenticate.bind(this), this.usersHandler.deleteUsers.bind(this.usersHandler));
 
-      this.app.listen(this.port, () => {
-          console.log(`Server started on port ${this.port}.`);
-      });
+        this.app.listen(this.port, () => {
+            console.log(`Server started on port ${this.port}.`);
+        });
     }
 
     authenticate(req, res, next) {
@@ -58,14 +105,14 @@ class Server {
         }
 
         jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) {
-            console.log(err);
-            return res.sendStatus(403);
-        }
+            if (err) {
+                console.log(err);
+                return res.sendStatus(403);
+            }
 
-        req.user = user;
-        next();
-      });
+            req.user = user;
+            next();
+        });
     }
 }
 

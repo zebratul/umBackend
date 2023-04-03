@@ -1,16 +1,16 @@
 const jwt = require("jsonwebtoken");
 
 class UsersHandler {
-    constructor(pool) {
-        this.pool = pool;
+    constructor(User) {
+        this.User = User;
     }
 
     async getUsers(req, res) {
         try {
             const token = req.headers.authorization.split(" ")[1];
             const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-            const result = await this.pool.query("SELECT * FROM userbase");
-            res.status(200).json(result.rows);
+            const users = await this.User.findAll();
+            res.status(200).json(users);
         } catch (error) {
             console.log(error);
             res.sendStatus(500);
@@ -24,10 +24,7 @@ class UsersHandler {
             const token = req.headers.authorization.split(" ")[1];
             const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
 
-            const text = "UPDATE userbase SET status = 'blocked' WHERE id = ANY($1)";
-            const values = [ids];
-
-            const result = await this.pool.query(text, values);
+            const result = await this.User.update({ status: 'blocked' }, { where: { id: ids } });
             console.log(`Users with IDs ${ids.join(", ")} have been blocked.`);
             res.sendStatus(200);
         } catch (error) {
@@ -43,10 +40,7 @@ class UsersHandler {
             const token = req.headers.authorization.split(" ")[1];
             const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
 
-            const text = "UPDATE userbase SET status = 'active' WHERE id = ANY($1)";
-            const values = [ids];
-
-            const result = await this.pool.query(text, values);
+            const result = await this.User.update({ status: 'active' }, { where: { id: ids } });
             console.log(`Users with IDs ${ids.join(", ")} have been unblocked.`);
             res.sendStatus(200);
         } catch (error) {
@@ -62,10 +56,7 @@ class UsersHandler {
             const token = req.headers.authorization.split(" ")[1];
             const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
 
-            const text = "DELETE FROM userbase WHERE id = ANY($1)";
-            const values = [ids];
-
-            const result = await this.pool.query(text, values);
+            const result = await this.User.destroy({ where: { id: ids } });
             console.log(`Users with IDs ${ids} have been deleted.`);
             res.sendStatus(200);
         } catch (error) {
