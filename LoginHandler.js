@@ -12,7 +12,7 @@ class LoginHandler {
         const { email, password } = req.body;
     
         try {
-            const user = await this.User.findOne({ where: { email }, attributes: ['id', 'name', 'email', 'last_login_time', 'registration_time', 'status'] });
+            const user = await this.User.findOne({ where: { email }, attributes: ['id', 'password', 'name', 'email', 'last_login_time', 'registration_time', 'status'] });
     
             if (!user) {
                 console.log(`User ${email} not found.`);
