@@ -10,42 +10,45 @@ class LoginHandler {
 
     async handle(req, res) {
         const { email, password } = req.body;
-
+    
         try {
-            const user = await this.User.findOne({ where: { email } });
-
+            const user = await this.User.findOne({ where: { email }, attributes: ['id', 'name', 'email', 'last_login_time', 'registration_time', 'status'] });
+    
             if (!user) {
                 console.log(`User ${email} not found.`);
                 res.status(401).json({ error: 'Invalid email or password.' });
                 return;
             }
-
+    
             if (user.status === 'blocked') {
                 console.log(`User ${email} is blocked.`);
                 res.status(401).json({ error: 'Account blocked.', message: 'Your account has been blocked. Please contact support for assistance.' });
                 return;
             }
-
+    
             const passwordMatch = await bcrypt.compare(password, user.password);
-
+    
             if (!passwordMatch) {
                 console.log(`Invalid password for user ${email}.`);
                 res.status(401).json({ error: 'Invalid email or password.' });
                 return;
             }
-
+    
             console.log(`User ${email} logged in.`);
-
+    
             await this.timeLogger.logTime(user.id);
-
+    
             const token = jwt.sign({ email }, process.env.JWT_SECRET);
 
-            res.status(200).json({ token });
+            user.password = undefined;
+    
+            res.status(200).json({ token, user });
         } catch (error) {
             console.log(error);
             res.sendStatus(500);
         }
     }
+    
 }
 
 module.exports = LoginHandler;

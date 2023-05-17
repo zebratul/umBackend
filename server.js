@@ -72,7 +72,7 @@ class Server {
             }
         }, {
             tableName: 'userbase',
-            timestamps: false // turn off automatic createdAt and updatedAt columns
+            timestamps: false
         });
         
 
